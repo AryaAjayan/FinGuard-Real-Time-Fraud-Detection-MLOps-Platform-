@@ -125,7 +125,7 @@ st.markdown("""
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_PATH = os.path.join(BASE_DIR, "data", "credit_card_fraud_10k.csv")
 METRICS_PATH = os.path.join(BASE_DIR, "model", "metrics.json")
-API_URL = "http://127.0.0.1:8000"
+API_URL = os.getenv("API_URL", "http://127.0.0.1:8000")
 
 # Header Hero Section
 st.markdown("""
