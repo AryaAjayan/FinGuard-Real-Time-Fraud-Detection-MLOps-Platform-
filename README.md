@@ -1,96 +1,84 @@
 # FinGuard - Real-Time Fraud Detection & MLOps Platform
 
-FinGuard is an enterprise-grade real-time fraud detection and MLOps platform. It integrates a high-performance XGBoost classification model, an asynchronous FastAPI serving engine for low-latency real-time inference, and an interactive Streamlit analytical dashboard for end-to-end security analysis and model management.
+## Overview
 
-## Key Features
+FinGuard is an enterprise-grade, real-time fraud detection and Machine Learning Operations (MLOps) platform. The system is designed to evaluate credit card transactions instantly, predicting the probability of fraud based on historical patterns and transaction metadata. It integrates a high-performance classification model, an asynchronous serving engine for low-latency inference, and an interactive analytical dashboard for end-to-end security analysis and model lifecycle management.
 
-- Real-Time Inference: Asynchronous serving endpoint that evaluates transaction features and computes instant machine learning risk probabilities.
-- Two-Page Analytical Dashboard: Separates transaction risk analysis from advanced MLOps diagnostics and dataset controls.
-- Dynamic Dataset Ingestion: Allows security engineers to upload custom transaction CSV files with automated schema validation.
-- XGBoost Training Pipeline: Hot-reload training capability with stratified splits and custom positive class weight scaling to handle highly imbalanced datasets.
-- Feature Importance Diagnostics: Extracts and visualizes top transaction risk indicators directly from the fitted model booster.
+## Technology Stack
+
+- **Machine Learning**: XGBoost, Scikit-learn, Pandas, NumPy
+- **Backend / API**: FastAPI, Uvicorn, Python 3.10
+- **Frontend / Dashboard**: Streamlit, Plotly
+- **Database**: PostgreSQL
+- **MLOps & Tracking**: MLflow
+- **Containerization**: Docker, Docker Compose
+- **Deployment**: Render, Hugging Face Spaces
 
 ## Architecture
 
-The platform consists of three main components:
-1. Data & Model Pipeline: Automated generation, preprocessing, and model fitting scripts with native support for MLflow tracking.
-2. Inference Service: Lightweight FastAPI app exposing predictions and live model-reload endpoints.
-3. Dashboard Console: Streamlit-based user interface displaying KPIs, feature graphs, and dataset tables.
+The platform follows a modular, microservices-oriented architecture consisting of three primary components:
+
+1. **Model & Data Pipeline (MLOps)**
+   - Responsible for generating synthetic transaction data or ingesting real-world datasets.
+   - Executes the automated training pipeline using XGBoost with stratified splitting and class-weight scaling to handle imbalanced datasets.
+   - Integrates with MLflow to track model performance metrics (Accuracy, ROC-AUC, Precision, Recall), confusion matrices, and feature importances.
+   - Serializes and stores the optimized model artifacts.
+
+2. **Inference Service (FastAPI)**
+   - A lightweight, asynchronous RESTful API serving engine.
+   - Exposes endpoints for real-time transaction scoring (`/predict`) and hot-reloading the active model (`/reload`) without downtime.
+   - Formats incoming JSON payloads into standard feature vectors expected by the predictive model.
+
+3. **Dashboard Console (Streamlit)**
+   - Provides a comprehensive two-page user interface.
+   - **Transaction Risk Analyzer**: Allows security personnel to input transaction details and receive instant risk evaluations (fraud probability and risk level classification).
+   - **MLOps & Training Center**: Facilitates dataset ingestion, triggers model retraining runs, and visualizes dataset diagnostics and model evaluation metrics via Plotly charts.
 
 ## Dataset Schema
 
-The system uses a 10-column credit card transaction schema:
-- transaction_id (int): Unique identifier for each transaction (dropped during training).
-- amount (float): The total dollar value of the transaction.
-- transaction_hour (int): The hour of the day when the transaction occurred (0 to 23).
-- merchant_category (string): The category of the merchant (Food, Clothing, Electronics, Grocery, Travel).
-- foreign_transaction (int): Binary indicator (0 or 1) of whether the transaction occurred internationally.
-- location_mismatch (int): Binary indicator (0 or 1) of whether the transaction location matches the cardholder billing address.
-- device_trust_score (int): Score reflecting device security profile (25 to 99).
-- velocity_last_24h (int): Number of transactions made on the card within the last 24 hours (0 to 9).
-- cardholder_age (int): The age of the cardholder (18 to 69).
-- is_fraud (int): Target label (0 for legitimate, 1 for fraudulent).
+The system analyzes transactions based on the following feature schema:
+
+- `amount` (float): Transaction value in dollars.
+- `transaction_hour` (int): Hour of the day (0-23).
+- `merchant_category` (string): Categorical encoding of the merchant (e.g., Food, Clothing, Electronics).
+- `foreign_transaction` (int): Binary indicator of international transactions.
+- `location_mismatch` (int): Binary indicator of billing address mismatch.
+- `device_trust_score` (int): Device security profile score (25-99).
+- `velocity_last_24h` (int): Transaction count in the previous 24 hours.
+- `cardholder_age` (int): Age of the primary account holder.
+- `is_fraud` (int): Target variable (0 for legitimate, 1 for fraudulent).
 
 ## Installation and Setup
 
 ### Prerequisites
-- Python 3.10+
+- Docker and Docker Compose
 - Git
 
-### Installation Steps
+### Local Deployment via Docker
 
 1. Clone the repository:
-```bash
-git clone https://github.com/AryaAjayan/FinGuard-Real-Time-Fraud-Detection-MLOps-Platform-.git
-cd FinGuard-Real-Time-Fraud-Detection-MLOps-Platform-
-```
+   ```bash
+   git clone https://github.com/AryaAjayan/FinGuard-Real-Time-Fraud-Detection-MLOps-Platform-.git
+   cd FinGuard-Real-Time-Fraud-Detection-MLOps-Platform-
+   ```
 
-2. Install the required Python packages:
-```bash
-pip install -r fraud_detection/requirements.txt
-```
+2. Build and start the services:
+   ```bash
+   cd fraud_detection
+   docker compose up -d --build
+   ```
 
-3. Start the FastAPI Serving Engine:
-```bash
-cd fraud_detection
-uvicorn api.main:app --host 127.0.0.1 --port 8000
-```
+3. Access the services:
+   - **Dashboard**: http://localhost:8501
+   - **FastAPI API**: http://localhost:8000
+   - **MLflow Tracking**: http://localhost:5000
 
-4. Start the Streamlit Analytical Dashboard (in a separate terminal window):
-```bash
-cd fraud_detection
-streamlit run dashboard/app.py --server.port 8501
-```
+## Cloud Deployment
 
-## API Endpoint Reference
+The application is configured for deployment on cloud platforms such as Render. The `API_URL` environment variable is used to dynamically route the Streamlit dashboard to the live FastAPI backend, allowing for seamless separated deployment of the frontend and backend services.
 
-### Home Status
-- Endpoint: `GET /`
-- Returns: Live server status and model loading flag.
+## API Reference
 
-### Get Fraud Prediction
-- Endpoint: `POST /predict`
-- Request Body (JSON):
-```json
-{
-  "amount": 84.47,
-  "transaction_hour": 22,
-  "merchant_category": "Food",
-  "foreign_transaction": 0,
-  "location_mismatch": 0,
-  "device_trust_score": 66,
-  "velocity_last_24h": 3,
-  "cardholder_age": 40
-}
-```
-- Response (JSON):
-```json
-{
-  "fraud_probability": 0.0125,
-  "risk_level": "LOW"
-}
-```
-
-### Hot-Reload Model
-- Endpoint: `POST /reload`
-- Returns: Re-loads the active serialization pkl file into RAM after training.
+- `GET /` : Returns API health status and model load state.
+- `POST /predict` : Accepts transaction JSON payload and returns fraud probability and risk classification.
+- `POST /reload` : Hot-reloads the active machine learning model into memory.
