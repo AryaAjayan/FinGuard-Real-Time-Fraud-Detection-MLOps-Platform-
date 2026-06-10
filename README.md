@@ -21,7 +21,7 @@ The platform follows a modular, microservices-oriented architecture consisting o
 1. **Model & Data Pipeline (MLOps)**
    - Responsible for generating synthetic transaction data or ingesting real-world datasets.
    - Executes the automated training pipeline using XGBoost with stratified splitting and class-weight scaling to handle imbalanced datasets.
-   - Integrates with MLflow to track model performance metrics (Accuracy, ROC-AUC, Precision, Recall), confusion matrices, and feature importances.
+   - **Experiment Tracking & Model Feedback Loops (MLflow)**: Actively tracks 50+ experiments, manages the automated model registry, and supports staged deployments. It comprehensively logs model performance metrics (Accuracy, ROC-AUC, Precision, Recall), confusion matrices, and feature importances.
    - Serializes and stores the optimized model artifacts.
 
 2. **Inference Service (FastAPI)**
